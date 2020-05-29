@@ -1,0 +1,214 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+#install.packages("tidyverse")
+library(tidyverse)
+library(cluster)
+library(fpc)
+
+
+
+data = read.csv2("~/Documents/hackthon/code/MyData.csv", sep = ",")
+dataPROF = read.csv2("~/Documents/hackthon/code/ProfData.csv", sep = ",")
+
+data$X <- NULL
+#data$name_img <- NULL
+data <- data[which(!data$sizeRatio=="Inf"),]
+data <- na.omit(data)
+
+for(i in 2:12){
+data[,i] <- as.numeric(data[,i])
+}
+class(data$V4)
+summary(data[,2:12])
+
+fit <- kmeans(data[,2:12],centers = 30)
+#
+# summary(fit$cluster)
+plotcluster(data[,2:12],fit$cluster)
+#
+
+# # get cluster means
+aggregate(data[,2:12],by=list(fit$cluster),FUN=mean)
+# # append cluster assignment
+data2 <- data.frame(data, fit$cluster)
+# Write CSV in R
+write.csv(data2, file = "~/Documents/hackthon/code/Cluster.csv")
+
+
+
+
+```
+```{r}
+
+
+lettre_df <-data2
+
+lettre_df$lettre[lettre_df$fit.cluster=='1'] <- as.character('L')
+lettre_df$lettre[lettre_df$fit.cluster=='2'] <- as.character('L')
+lettre_df$lettre[lettre_df$fit.cluster=='3'] <- as.character('N')
+lettre_df$lettre[lettre_df$fit.cluster=='4'] <- as.character('J')
+lettre_df$lettre[lettre_df$fit.cluster=='5'] <- as.character('A')
+lettre_df$lettre[lettre_df$fit.cluster=='6'] <- as.character('B')
+lettre_df$lettre[lettre_df$fit.cluster=='7'] <- as.character('D')
+lettre_df$lettre[lettre_df$fit.cluster=='8'] <- as.character('U')
+lettre_df$lettre[lettre_df$fit.cluster=='9'] <- as.character('R')
+lettre_df$lettre[lettre_df$fit.cluster=='10'] <- as.character('F')
+lettre_df$lettre[lettre_df$fit.cluster=='11'] <- as.character('S')
+lettre_df$lettre[lettre_df$fit.cluster=='12'] <- as.character('I')
+lettre_df$lettre[lettre_df$fit.cluster=='13'] <- as.character('G')
+lettre_df$lettre[lettre_df$fit.cluster=='14'] <- as.character('Y')
+lettre_df$lettre[lettre_df$fit.cluster=='15'] <- as.character('P')
+lettre_df$lettre[lettre_df$fit.cluster=='16'] <- as.character('N')
+lettre_df$lettre[lettre_df$fit.cluster=='17'] <- as.character('C')
+lettre_df$lettre[lettre_df$fit.cluster=='18'] <- as.character('N')
+lettre_df$lettre[lettre_df$fit.cluster=='19'] <- as.character('E')
+lettre_df$lettre[lettre_df$fit.cluster=='20'] <- as.character('I')
+lettre_df$lettre[lettre_df$fit.cluster=='21'] <- as.character('M')
+lettre_df$lettre[lettre_df$fit.cluster=='22'] <- as.character('O')
+lettre_df$lettre[lettre_df$fit.cluster=='23'] <- as.character('U')
+lettre_df$lettre[lettre_df$fit.cluster=='24'] <- as.character('A')
+lettre_df$lettre[lettre_df$fit.cluster=='25'] <- as.character('H')
+lettre_df$lettre[lettre_df$fit.cluster=='26'] <- as.character('L')
+lettre_df$lettre[lettre_df$fit.cluster=='27'] <- as.character('Q')
+lettre_df$lettre[lettre_df$fit.cluster=='28'] <- as.character('O')
+lettre_df$lettre[lettre_df$fit.cluster=='29'] <- as.character('B')
+lettre_df$lettre[lettre_df$fit.cluster=='30'] <- as.character('Q')
+
+
+
+
+summary(lettre_df$lettre)
+#lettre_df$lettre <- as.vector(lettre_df$lettre)
+
+summary(lettre_df$lettre)
+## 75% of the sample size
+smp_size <- floor(0.6 * nrow(lettre_df))
+
+## set the seed to make your partition reproducible
+set.seed(123)
+train_ind <- sample(seq_len(nrow(lettre_df)), size = smp_size)
+
+train <- lettre_df[train_ind, ]
+test <- lettre_df[-train_ind, ]
+
+summary(train[,2:15])
+summary(test[,2:15])
+```
+
+```{r}
+library(caret)
+
+summary(train[,2:15])
+?make.names
+control <- trainControl(method="cv", number=10)
+
+formula_knn <- lettre~ .
+metric <- "Accuracy"
+seed <- 7
+summary(train)
+#SVM Radial Tunned
+set.seed(seed)
+fit.knn_train <- train(formula_knn,
+                             data = train[,2:15],
+                             method = "knn",
+                             trControl=control)
+fit.knn_train
+plot(fit.knn_train)
+
+```
+
+```{r}
+#Choose the best model
+
+test_pred1 <- predict(fit.knn_train, newdata = test)
+#test_pred1
+```
+
+```{r}
+
+summary(test$lettre)
+summary(test)
+mConfusion <- table(test$lettre,test_pred1)
+
+TrainErr <- sum(diag(mConfusion))/sum(mConfusion)
+print(TrainErr)
+
+```
+
+```{r}
+dataPROF = read.csv2("~/Documents/hackthon/code/ProfData.csv", sep = ",")
+
+dataPROF$X <- NULL
+#data$name_img <- NULL
+dataPROF <- dataPROF[which(!dataPROF$sizeRatio=="Inf"),]
+dataPROF <- na.omit(dataPROF)
+
+for(i in 2:12){
+dataPROF[,i] <- as.numeric(dataPROF[,i])
+}
+class(dataPROF$V4)
+summary(dataPROF[,2:12])
+
+
+fit <- kmeans(dataPROF[,2:12],centers = 30)
+#
+# summary(fit$cluster)
+plotcluster(dataPROF[,2:12],fit$cluster)
+#
+
+# # get cluster means
+aggregate(dataPROF[,2:12],by=list(fit$cluster),FUN=mean)
+# # append cluster assignment
+datanewprof_df <- data.frame(dataPROF, fit$cluster)
+
+
+
+
+
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='1'] <- as.character('L')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='2'] <- as.character('L')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='3'] <- as.character('N')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='4'] <- as.character('J')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='5'] <- as.character('A')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='6'] <- as.character('B')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='7'] <- as.character('D')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='8'] <- as.character('U')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='9'] <- as.character('R')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='10'] <- as.character('F')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='11'] <- as.character('S')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='12'] <- as.character('I')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='13'] <- as.character('G')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='14'] <- as.character('Y')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='15'] <- as.character('P')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='16'] <- as.character('N')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='17'] <- as.character('C')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='18'] <- as.character('N')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='19'] <- as.character('E')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='20'] <- as.character('I')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='21'] <- as.character('M')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='22'] <- as.character('O')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='23'] <- as.character('U')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='24'] <- as.character('A')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='25'] <- as.character('H')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='26'] <- as.character('L')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='27'] <- as.character('Q')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='28'] <- as.character('O')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='29'] <- as.character('B')
+datanewprof_df$lettre[datanewprof_df$fit.cluster=='30'] <- as.character('Q')
+
+
+
+summary(datanewprof_df)
+write.csv(datanewprof_df, file = "~/Documents/hackthon/code/ImageOFProf.csv")
+pred_prof <- predict(fit.knn_train, newdata = datanewprof_df)
+# 
+# mConfusion <- table(datanewprof_df$lettre,pred_prof)
+# 
+# TrainErr <- sum(diag(mConfusion))/sum(mConfusion)
+# print(TrainErr)
+```
+

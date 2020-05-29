@@ -1,0 +1,90 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+#Load libraries and constants
+library(png)
+dir_images <- "~/Documents/hackthon/data/first-data-set/0"
+```
+
+```{r}
+#Load images
+setwd(dir_images)
+images <- dir()
+n <- length(images)
+list_images <- list(readPNG(images[1]))
+
+for(i in 2:n){
+  #list of matrix of images
+  list_images <- c(list_images, list(readPNG(images[i])))
+  
+}
+```
+```{r}
+#
+setwd(dir_images)
+#load images
+images <- dir()
+n <- length(images)
+#qty images
+k<-10
+
+#stock values of white ratio in each rows
+out<-list()
+for (i in 1:k) {
+  img <- readPNG(images[i])
+  x<-vector()
+  #len is long of a row 
+  for (j in 0:length(img[,1])){
+    #len of column
+    l <- length(img[j,])
+    #number of white pixels
+    s <- sum(img[j,])
+    #ratio of white 
+    r <- s/l
+    #vector of ratio of white
+    x[j]<-r
+  }
+  #result list of ratio in each rows in each image
+  out[[i]]<-x
+}
+```
+
+
+```{r}
+library(tesseract)
+img <- readPNG("img-14006.png")
+dim(img)
+#the matrix/data.frame of bounding boxes of the elements on the page.
+bbox <- img
+
+
+
+eng <- tesseract("eng")
+text <- tesseract::ocr("img-14006.png", engine = eng)
+cat(text)
+
+# results <- tesseract::ocr_data("img-14006.png", engine = eng)
+# results
+# 
+# tesseract_info()
+
+```
+
+```{r}
+library(imager)
+file <- system.file('img-14006.png',package='imager')
+#system.file gives the full path for a file that ships with a R package
+#if you already have the full path to the file you want to load just run:
+#im <- load.image("/somedirectory/myfile.png")
+im <- load.image(file)
+plotplot(im)
+# parrots <- load.example('img-14006.png')
+# gray.parrots <- grayscale(parrots)
+# dim(gray.parrots)
+# 
+# width(parrots)
+```
+
